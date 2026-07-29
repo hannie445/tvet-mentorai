@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply text-foreground antialiased;
+    background-color: #f8faff;
+    background-image: radial-gradient(ellipse 900px 700px at 8% 0%, rgba(247, 243, 255, 0.95), transparent 55%),
+      radial-gradient(ellipse 900px 700px at 92% 15%, rgba(245, 249, 255, 0.95), transparent 55%),
+      radial-gradient(ellipse 1100px 800px at 50% 100%, rgba(251, 248, 255, 0.9), transparent 60%),
+      radial-gradient(circle at 12% 8%, rgba(99, 102, 241, 0.06), transparent 40%),
+      radial-gradient(circle at 88% 4%, rgba(147, 51, 234, 0.05), transparent 35%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-primary-100 text-primary-800;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-primary-400 ring-offset-2 ring-offset-white;
+  }
+}
+
+/**
+ * Screenshot Mode — opt-in only (toggled by ScreenshotModeToggle when the
+ * page is loaded with ?screenshot=1). Freezes animations/transitions so a
+ * captured screenshot never catches a mid-hover or mid-spin frame, and hides
+ * a small set of non-essential controls (regenerate buttons, mode badges)
+ * for a cleaner presentation shot. Has no effect otherwise — default UI is
+ * completely unchanged.
+ */
+.screenshot-mode *,
+.screenshot-mode *::before,
+.screenshot-mode *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+.screenshot-mode [data-hide-in-screenshot="true"] {
+  display: none !important;
+}
