@@ -78,7 +78,82 @@ different Worker/project name).
 **Nothing in `src/` was touched.** No component, page, styling, or branding
 change was made — this is purely additive build tooling around the existing app.
 
-## Troubleshooting: `npm install` peer-dependency conflicts
+## Troubleshooting: `@opennextjs/cloudflare requires Next >=X, project uses Next Y`
+
+`next` was bumped from a pinned `15.0.3` to `^15.5.21` (and `eslint-config-next`
+alongside it, since that package is meant to track the exact same Next.js
+version) to satisfy `@opennextjs/cloudflare`'s minimum Next.js requirement.
+This is a minor-version bump within the same major (`15.x`), so per semver
+it should carry no breaking changes to the App Router APIs this project
+uses — no UI, component, or config changes were needed alongside it.
+
+If a future `@opennextjs/cloudflare` upgrade raises the minimum Next.js
+version again, bump `next` (and `eslint-config-next` to match) the same way.
+
+## Troubleshooting: "invalid configuration for Cloudflare Pages"
+
+`wrangler.jsonc` originally used the **Workers** deployment convention
+(`main` pointing at `.open-next/worker.js`, plus an `assets` block). That's
+correct for deploying via `wrangler deploy` as a standalone Worker, but a
+**Cloudflare Pages** project (the git-connected, dashboard-managed product)
+expects a different, mutually-exclusive convention: `pages_build_output_dir`.
+Having `main` present told Wrangler this was a Workers project while your
+Cloudflare project is actually configured as Pages — that mismatch is what
+"invalid configuration" meant.
+
+Fixed by switching to the Pages convention:
+
+```jsonc
+{
+  "pages_build_output_dir": ".open-next/assets"
+  // "main" removed - Pages and Workers deploy modes don't mix in one config
+}
+```
+
+`cf:preview`/`cf:deploy` were updated to match — `wrangler pages dev` /
+`wrangler pages deploy` instead of the Workers-oriented commands.
+
+**One thing I'm flagging honestly rather than asserting with false
+confidence:** `@opennextjs/cloudflare`'s primary, most-documented target is
+Workers deployment, not Pages. I'm reasonably confident `.open-next/assets`
+is the right directory for `pages_build_output_dir` (it's where OpenNext
+puts the static assets + the SSR handling script), but I have not been able
+to verify this against a real Cloudflare Pages build in this environment. If
+Pages' build still complains after this fix, the two most likely next steps
+are (a) confirming the exact file OpenNext's Cloudflare adapter emits inside
+`.open-next/assets` matches Pages' `_worker.js` convention, or (b) switching
+the Cloudflare project itself from "Pages" to "Workers" in the dashboard,
+which is the path the adapter's own docs steer toward.
+
+## Troubleshooting: Cloudflare still reports `next@15.0.3` after the version bump
+
+`package.json` already correctly says `"next": "^15.5.21"` (verified by
+extracting and inspecting the uploaded project directly) — the version bump
+from a previous fix is intact. But **there is still no `package-lock.json`
+anywhere in this project.** Without one:
+
+- If Cloudflare's build runs `npm ci`, it would fail outright (no lockfile
+  to install from) rather than silently install an old version — so that's
+  probably not what's happening.
+- More likely: Cloudflare's build system cached `node_modules` (or npm's
+  cache) from the **first failed build**, back when `package.json` still
+  said `"next": "15.0.3"`. Without a lockfile forcing a specific resolved
+  version, a subsequent build can reuse that stale cached install instead of
+  re-resolving against the updated `package.json`.
+
+**The real fix requires two things I cannot do in this sandbox** (no network
+access to npm's registry):
+
+1. Run `npm install` for real, somewhere with registry access (your machine
+   or Claude Code), which both generates the missing `package-lock.json`
+   *and* forces a fresh resolution that will actually pick up `15.5.21+`.
+   Commit the resulting lockfile.
+2. If Cloudflare's dashboard has a "clear build cache" option for this
+   project (Settings → Builds & deployments, or similar), use it before the
+   next deploy, so it can't fall back to the stale cached `next@15.0.3`
+   install regardless of what's now in `package.json`.
+
+
 
 If `npm install` fails with an `ERESOLVE` error (without `--legacy-peer-deps`),
 it's almost certainly because some package in the tree (commonly `react-pdf`,
