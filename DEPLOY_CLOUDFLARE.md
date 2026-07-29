@@ -90,6 +90,14 @@ uses — no UI, component, or config changes were needed alongside it.
 If a future `@opennextjs/cloudflare` upgrade raises the minimum Next.js
 version again, bump `next` (and `eslint-config-next` to match) the same way.
 
+## Troubleshooting: `wrangler` version too old for `@opennextjs/cloudflare`
+
+`wrangler` was bumped from `^3.99.0` to `^4.86.0` per the Cloudflare build
+log's exact requirement. Same underlying pattern as the earlier Next.js
+version issue: `@opennextjs/cloudflare` has a minimum version requirement on
+one of its tools, and the fix is a straight version bump — nothing else in
+this file needed to change for it.
+
 ## Troubleshooting: "invalid configuration for Cloudflare Pages"
 
 `wrangler.jsonc` originally used the **Workers** deployment convention
