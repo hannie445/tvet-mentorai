@@ -2,6 +2,8 @@
 
 Digital Instructional Coach dashboard for TVET Malaysia, built with Next.js 15, React 19, TypeScript, Tailwind CSS, and a shadcn/ui-style component set.
 
+> **Deploying to Cloudflare?** See [`DEPLOY_CLOUDFLARE.md`](./DEPLOY_CLOUDFLARE.md) for the full guide (build/deploy commands, secrets, what was added and why).
+
 ## Getting started
 
 ```bash
